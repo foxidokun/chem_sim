@@ -2,7 +2,15 @@
 
 #include <cstdlib>
 #include <new>
+#include <vector>
 
+#define DISABLE_DYNARRAY_FOR_SAFETY 1
+
+
+#if DISABLE_DYNARRAY_FOR_SAFETY
+template<typename T>
+using dynarray = std::vector<T>;
+#else
 template<typename T>
 class dynarray {
 private:
@@ -25,12 +33,11 @@ public:
                 throw std::bad_alloc();
             }
         }
-    
+
     size_t capacity() { return _capacity; }
     size_t size()     { return _size; }
 
-    void push_pack(T elem);
-    void push_pack(T&& elem);
+    void push_back(T&& elem);
 
     T& operator[](size_t index){
         return &_data[index];
@@ -40,3 +47,4 @@ public:
         return &_data[index];
     }
 };
+#endif
