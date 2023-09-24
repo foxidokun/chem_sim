@@ -7,6 +7,7 @@
 #include "dynarray.h"
 #include "config.h"
 #include "interval.h"
+#include "render.h"
 #include <cassert>
 
 // Not-extensible solution
@@ -16,7 +17,7 @@ enum class MoleculeType {
     ENUM_SIZE
 };
 
-class BaseMolecule {
+class BaseMolecule: public Renderable {
 protected:
     MoleculeType _type;
 public:
@@ -39,8 +40,6 @@ public:
 
     MoleculeType type() const noexcept { return _type; };
 
-    virtual void draw(sf::RenderTexture& window) const = 0;
-
     virtual ~BaseMolecule() = default;
 };
 
@@ -52,7 +51,7 @@ public:
             _type = MoleculeType::NyaMolec;
         };
     
-    void draw(sf::RenderTexture& window) const final;
+    void render(sf::RenderTexture& window) const final;
 };
 
 class MeowMolec: public BaseMolecule {
@@ -63,10 +62,10 @@ public:
             _type = MoleculeType::MeowMolec;
         };
     
-    void draw(sf::RenderTexture& window) const final;
+    void render(sf::RenderTexture& window) const final;
 };
 
-class Gas {
+class Gas: public Renderable {
 private:
     dynarray<BaseMolecule *> _moleculas;
     Interval _x_limits;
@@ -97,6 +96,7 @@ public:
     void spawn_random(Point pos);
 
     void tick();
+    void render(sf::RenderTexture& window) const;
 
     void mark_deleted(BaseMolecule *mol) {
         assert(!mol->is_deleted);

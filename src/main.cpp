@@ -1,8 +1,13 @@
 #include "common.h"
 #include <SFML/Graphics.hpp>
 #include "render.h"
+#include "gas.h"
+#include "button.h"
 #include <chrono>
 #include <thread>
+#include <iostream>
+
+void add_buttons(ButtonManager& button_mgr);
 
 namespace chrono = std::chrono;
 
@@ -16,36 +21,63 @@ int main() {
         gas.spawn_random<NyaMolec>();
     }
 
+    ButtonManager buttonmgr;
+    add_buttons(buttonmgr);
+
     auto frame_start_time = chrono::system_clock::now();
 
     while (window.isOpen()) {
-        sf::Event event;
-        while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed) {
-                window.close();
-                return 0;
-            }
-        }
-
         window.clear();
 
         sf::RenderTexture back;
         back.create(WINDOW_WIDTH, WINDOW_HEIGHT);
         back.clear(sf::Color::Black);
-        window.draw(sf::Sprite(back.getTexture()));
-
-        gas.tick();
 
         sf::RenderTexture gas_texture;
         gas_texture.create(GAS_WIDTH, GAS_HEIGHT);
         sf::Sprite gas_block(gas_texture.getTexture());
-        render(gas_texture, gas);
         gas_block.setPosition(20, 20);
-        window.draw(gas_block);
 
-        // display
+        gas.tick();
+        gas.render(gas_texture);
+        buttonmgr.render(back);
+
+        window.draw(sf::Sprite(back.getTexture()));
+        window.draw(gas_block);
         window.display();
+
+        sf::Event event;
+        while (window.pollEvent(event)) {
+            if (event.type == sf::Event::Closed) {
+                window.close();
+                return 0;
+            } else if (event.type == sf::Event::MouseButtonPressed || event.type == sf::Event::MouseButtonReleased) {
+                auto cc = window.mapPixelToCoords(sf::Vector2i(event.mouseButton.x, event.mouseButton.y));
+
+                buttonmgr.dispatch(window, event);
+            }
+        }
 
         std::this_thread::sleep_until(frame_start_time + std::chrono::milliseconds(33));
     }
+}
+
+void callback_a(const sf::Event&) {
+    std::cout << "A\n";
+}
+
+void callback_и(const sf::Event&) {
+    std::cout << "B\n";
+}
+void callback_с(const sf::Event&) {
+    std::cout << "C\n";
+}
+void callback_в(const sf::Event&) {
+    std::cout << "D\n";
+}
+
+void add_buttons(ButtonManager& button_mgr) {
+    auto test_butt = new TextureButton(Point(600, 0), 50, 30, callback_a);
+
+    button_mgr.register_button(test_butt);
 }

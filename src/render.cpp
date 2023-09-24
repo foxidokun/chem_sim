@@ -1,22 +1,21 @@
 #include "common.h"
 #include "render.h"
 #include "gas.h"
+#include "button.h"
 
 static void render_piston(sf::RenderTexture& window, double piston_y);
 
-void render(sf::RenderTexture& window, const Gas& gas) {
-    const dynarray<BaseMolecule *> moleculas = gas.moleculas();
-
-    for (uint i = 0; i < moleculas.size(); ++i) {
-        if (!moleculas[i]->is_deleted) {
-            moleculas[i]->draw(window);
+void Gas::render(sf::RenderTexture& window) const {
+    for (uint i = 0; i < _moleculas.size(); ++i) {
+        if (!_moleculas[i]->is_deleted) {
+            _moleculas[i]->render(window);
         }
     }
 
-    render_piston(window, gas.piston_y);
+    render_piston(window, piston_y);
 }
 
-void NyaMolec::draw(sf::RenderTexture& window) const {
+void NyaMolec::render(sf::RenderTexture& window) const {
     sf::CircleShape circle;
     circle.setRadius(radius);
     circle.setFillColor(sf::Color::Red);
@@ -24,7 +23,7 @@ void NyaMolec::draw(sf::RenderTexture& window) const {
     window.draw(circle);
 }
 
-void MeowMolec::draw(sf::RenderTexture& window) const {
+void MeowMolec::render(sf::RenderTexture& window) const {
     sf::CircleShape circle;
     circle.setRadius(radius);
     circle.setFillColor(sf::Color::Green);
