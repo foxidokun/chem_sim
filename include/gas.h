@@ -22,12 +22,12 @@ protected:
 public:
     Point pos;
     Vector vel;
-    double mass;
+    uint mass;
     double radius;
 
     bool is_deleted = false;
 
-    BaseMolecule(Point pos_, Vector vel_, double mass_):
+    BaseMolecule(Point pos_, Vector vel_, uint mass_):
         pos(pos_),
         vel(vel_),
         mass(mass_),
@@ -46,7 +46,7 @@ public:
 
 class NyaMolec: public BaseMolecule {
 public:
-    NyaMolec(Point pos_, Vector vel_, double mass_):
+    NyaMolec(Point pos_, Vector vel_, uint mass_):
         BaseMolecule(pos_, vel_, mass_)
         {
             _type = MoleculeType::NyaMolec;
@@ -57,7 +57,7 @@ public:
 
 class MeowMolec: public BaseMolecule {
 public:
-    MeowMolec(Point pos_, Vector vel_, double mass_):
+    MeowMolec(Point pos_, Vector vel_, uint mass_):
         BaseMolecule(pos_, vel_, mass_)
         {
             _type = MoleculeType::MeowMolec;
@@ -71,10 +71,11 @@ private:
     dynarray<BaseMolecule *> _moleculas;
     Interval _x_limits;
     Interval _y_limits;
+    uint _gc_count;
 
     void collide(size_t i, size_t j);
+    void gc();
 
-    uint _gc_count;
 public:
     Gas() = default;
 
@@ -89,6 +90,9 @@ public:
 
     template<typename T>
     void spawn_random();
+
+    template<typename T>
+    void spawn_random(Point pos);
 
     void tick();
 
@@ -110,8 +114,13 @@ public:
 
 template<typename T>
 void Gas::spawn_random() {
-    Point pos = Point(random_double(_x_limits.min, _x_limits.max), random_double(_y_limits.min, _y_limits.max), 0);
+    Point pos = Point(random_double(_x_limits.min, _x_limits.max), random_double(_y_limits.min, _y_limits.max));
 
+    spawn_random<T>(pos);
+};
+
+template<typename T>
+void Gas::spawn_random(Point pos) {
     // TODO velocity based on gas temperature
-    add(new T(pos, Vector::random(-0.1, 0.1), 10));
+    add(new T(pos, Vector::random(-0.2, 0.1), 1));
 };

@@ -14,7 +14,11 @@ Vector operator*(const double& scalar, const Vector& vec) {
 }
 
 Vector operator*(const Vector& lhs, const Vector& rhs) {
-    return Vector(lhs.x * rhs.x, lhs.y * rhs.y, lhs.z * rhs.z);
+    return Vector(lhs.x * rhs.x, lhs.y * rhs.y 
+    #if VECTOR_DIM > 2
+    , lhs.z * rhs.z
+    #endif
+    );
 }
 
 Vector operator+(const Vector& lhs, const Vector& rhs) {
@@ -30,7 +34,11 @@ Vector operator-(const Vector& lhs, const Vector& rhs) {
 }
 
 std::ostream& operator<<(std::ostream& out, const Vector& vec) {
-    out << "Vector {x: " << vec.x << "; y: " << vec.y << "; z: " << vec.z << "}";
+    out << "Vector {x: " << vec.x << "; y: " << vec.y << ";"
+        #if VECTOR_DIM > 2
+        << " z: " << vec.z 
+        #endif
+        << "}";
     return out;
 }
 
@@ -45,15 +53,20 @@ Vector Vector::norm() const {
 
 double dot(const Vector& lhs, const Vector& rhs) {
     return lhs.x * rhs.x +
-           lhs.y * rhs.y +
-           lhs.z * rhs.z;
+           lhs.y * rhs.y
+        #if VECTOR_DIM > 2
+           + lhs.z * rhs.z
+        #endif
+           ;
 }
 
+#if VECTOR_DIM > 2
 Vector cross(const Vector& u, const Vector& v) {
     return Vector(u.y * v.z - u.z * v.y,
                   u.z * v.x - u.x * v.z,
                   u.x * v.y - u.y * v.x);
 }
+#endif
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Randomization

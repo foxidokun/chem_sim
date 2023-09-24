@@ -10,8 +10,11 @@ int main() {
     sf::RenderWindow window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), WINDOW_TITLE);
 
     Gas gas(Interval(0, WINDOW_WIDTH), Interval(0, WINDOW_HEIGHT));
-    gas.add(new NyaMolec(Point(10, 10, 0), Vector(), 15));
-    gas.add(new NyaMolec(Point(14.1, 13, 0), Vector(), 15));
+
+    for (uint i = 0; i < 300; ++i) {
+        gas.spawn_random<NyaMolec>();
+    }
+
 
     auto frame_start_time = chrono::system_clock::now();
 
