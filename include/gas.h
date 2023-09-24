@@ -5,6 +5,7 @@
 #include "vector.h"
 #include "dynarray.h"
 #include "config.h"
+#include "interval.h"
 
 class BaseMolecule {
 public:
@@ -43,15 +44,28 @@ public:
 class Gas {
 private:
     dynarray<BaseMolecule *> _moleculas;
+    Interval _x_limits;
+    Interval _y_limits;
 
 public:
     Gas() = default;
+
+    Gas(Interval x_limits, Interval y_limits):
+        _x_limits(x_limits),
+        _y_limits(y_limits)
+        {};
 
     void add(BaseMolecule *mol) {
         _moleculas.push_back(mol);
     }
 
-    void tick() {};
+    void tick();
 
     const dynarray<BaseMolecule *>& moleculas() const noexcept { return _moleculas; }
+
+    ~Gas() {
+        for (uint i = 0; i < _moleculas.size(); ++i) {
+            delete _moleculas[i];
+        }
+    }
 };

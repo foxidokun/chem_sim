@@ -5,8 +5,8 @@
 int main() {
     sf::RenderWindow window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), WINDOW_TITLE);
 
-    Gas gas;
-    gas.add(new NyaMolec(Point(30, 30, 0), Vector(), 20));
+Gas gas(Interval(0, 100), Interval(0, 100));
+    gas.add(new NyaMolec(Point(30, 30, 0), Vector(0.1, 0.1, 0), 20));
 
     while (window.isOpen()) {
         sf::Event event;
@@ -17,6 +17,8 @@ int main() {
             }
         }
 
+        window.clear();
+        gas.tick();
         render(window, gas);
 
         // display
