@@ -9,13 +9,12 @@ namespace chrono = std::chrono;
 int main() {
     sf::RenderWindow window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), WINDOW_TITLE);
 
-    Gas gas(Interval(0, WINDOW_WIDTH), Interval(0, WINDOW_HEIGHT));
-    gas.piston_y = WINDOW_HEIGHT - 50;
+    Gas gas(Interval(0, GAS_WIDTH), Interval(0, GAS_HEIGHT));
+    gas.piston_y = GAS_HEIGHT - 50;
 
     for (uint i = 0; i < 300; ++i) {
         gas.spawn_random<NyaMolec>();
     }
-
 
     auto frame_start_time = chrono::system_clock::now();
 
@@ -38,9 +37,11 @@ int main() {
         gas.tick();
 
         sf::RenderTexture gas_texture;
-        gas_texture.create(WINDOW_WIDTH, WINDOW_HEIGHT);
+        gas_texture.create(GAS_WIDTH, GAS_HEIGHT);
+        sf::Sprite gas_block(gas_texture.getTexture());
         render(gas_texture, gas);
-        window.draw(sf::Sprite(gas_texture.getTexture()));
+        gas_block.setPosition(20, 20);
+        window.draw(gas_block);
 
         // display
         window.display();

@@ -10,8 +10,8 @@ const double NEAR_ZERO_VEC_1DLEN = 1e-5;
 const uint WINDOW_WIDTH  = 1080;
 const uint WINDOW_HEIGHT = 720;
 
-const uint RENDER_WIDTH  = WINDOW_WIDTH / 3;
-const uint RENDER_HEIGHT = WINDOW_HEIGHT * 0.8;
+const uint GAS_WIDTH  = WINDOW_WIDTH / 3;
+const uint GAS_HEIGHT = WINDOW_HEIGHT - 40;
 
 const uint PISTON_HEIGHT = 5;
 
