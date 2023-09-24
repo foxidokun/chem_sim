@@ -3,4 +3,4 @@
 #include "gas.h"
 #include <SFML/Graphics.hpp>
 
-void render(sf::RenderWindow& window, const Gas& gas);
+void render(sf::RenderTexture& window, const Gas& gas);

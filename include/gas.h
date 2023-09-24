@@ -39,7 +39,7 @@ public:
 
     MoleculeType type() const noexcept { return _type; };
 
-    virtual void draw(sf::RenderWindow& window) const = 0;
+    virtual void draw(sf::RenderTexture& window) const = 0;
 
     virtual ~BaseMolecule() = default;
 };
@@ -52,7 +52,7 @@ public:
             _type = MoleculeType::NyaMolec;
         };
     
-    void draw(sf::RenderWindow& window) const final;
+    void draw(sf::RenderTexture& window) const final;
 };
 
 class MeowMolec: public BaseMolecule {
@@ -63,7 +63,7 @@ public:
             _type = MoleculeType::MeowMolec;
         };
     
-    void draw(sf::RenderWindow& window) const final;
+    void draw(sf::RenderTexture& window) const final;
 };
 
 class Gas {
@@ -77,6 +77,8 @@ private:
     void gc();
 
 public:
+    double piston_y;
+
     Gas() = default;
 
     Gas(Interval x_limits, Interval y_limits):
@@ -114,7 +116,8 @@ public:
 
 template<typename T>
 void Gas::spawn_random() {
-    Point pos = Point(random_double(_x_limits.min, _x_limits.max), random_double(_y_limits.min, _y_limits.max));
+    Point pos = Point(random_double(_x_limits.min, _x_limits.max),
+                        random_double(_y_limits.min, std::min(_y_limits.max, piston_y)));
 
     spawn_random<T>(pos);
 };

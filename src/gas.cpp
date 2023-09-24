@@ -7,6 +7,7 @@
 
 static void wall_collision(BaseMolecule* molec, const Interval& x_limits, const Interval& y_limits);
 static bool is_hit(BaseMolecule *lhs, BaseMolecule* rhs);
+static void piston_collision(BaseMolecule* molec, double piston_y);
 static void collide_nya_nya(BaseMolecule* lhs, BaseMolecule *rhs, Gas& gas);
 static void collide_nya_meow(BaseMolecule* lhs, BaseMolecule *rhs, Gas& gas);
 static void collide_meow_nya(BaseMolecule* lhs, BaseMolecule *rhs, Gas& gas);
@@ -34,6 +35,7 @@ void Gas::tick() {
         _moleculas[i]->pos += _moleculas[i]->vel;
 
         wall_collision(_moleculas[i], _x_limits, _y_limits);
+        piston_collision(_moleculas[i], piston_y);
 
         for (uint j = i + 1; j < current_size; ++j) {
             if (_moleculas[i]->is_deleted) {break;}
@@ -70,6 +72,12 @@ static void wall_collision(BaseMolecule* molec, const Interval& x_limits, const 
     }
 
     if (!y_limits.contains(molec->pos.y)) {
+        molec->vel.y *= -1;
+    }
+}
+
+static void piston_collision(BaseMolecule* molec, double piston_y) {
+    if (molec->pos.y >= piston_y) {
         molec->vel.y *= -1;
     }
 }
@@ -129,7 +137,7 @@ static void collide_meow_meow(BaseMolecule* lhs, BaseMolecule *rhs, Gas& gas) {
 
     for (uint i = 0; i < total_mass; ++i) {
         Vector direction = Vector::random(-1, 1).norm();
-        Vector p_vel = direction * (2 * sqrt(random_double()) * avg_vel);
+        Vector p_vel = direction * (2.2 * sqrt(random_double()) * avg_vel);
         Point p_pos = avg_pos + direction * BASE_RADIUS * 10;
         gas.add(new NyaMolec(p_pos, p_vel, 1));
     }

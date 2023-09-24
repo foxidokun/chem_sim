@@ -10,6 +10,7 @@ int main() {
     sf::RenderWindow window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), WINDOW_TITLE);
 
     Gas gas(Interval(0, WINDOW_WIDTH), Interval(0, WINDOW_HEIGHT));
+    gas.piston_y = WINDOW_HEIGHT - 50;
 
     for (uint i = 0; i < 300; ++i) {
         gas.spawn_random<NyaMolec>();
@@ -29,8 +30,17 @@ int main() {
 
         window.clear();
 
+        sf::RenderTexture back;
+        back.create(WINDOW_WIDTH, WINDOW_HEIGHT);
+        back.clear(sf::Color::Black);
+        window.draw(sf::Sprite(back.getTexture()));
+
         gas.tick();
-        render(window, gas);
+
+        sf::RenderTexture gas_texture;
+        gas_texture.create(WINDOW_WIDTH, WINDOW_HEIGHT);
+        render(gas_texture, gas);
+        window.draw(sf::Sprite(gas_texture.getTexture()));
 
         // display
         window.display();
