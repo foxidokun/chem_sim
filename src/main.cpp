@@ -9,8 +9,9 @@ namespace chrono = std::chrono;
 int main() {
     sf::RenderWindow window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), WINDOW_TITLE);
 
-Gas gas(Interval(0, 100), Interval(0, 100));
-    gas.add(new NyaMolec(Point(30, 30, 0), Vector(0.1, 0.1, 0), 20));
+    Gas gas(Interval(0, WINDOW_WIDTH), Interval(0, WINDOW_HEIGHT));
+    gas.add(new NyaMolec(Point(10, 10, 0), Vector(), 15));
+    gas.add(new NyaMolec(Point(14.1, 13, 0), Vector(), 15));
 
     auto frame_start_time = chrono::system_clock::now();
 
@@ -24,6 +25,7 @@ Gas gas(Interval(0, 100), Interval(0, 100));
         }
 
         window.clear();
+
         gas.tick();
         render(window, gas);
 
