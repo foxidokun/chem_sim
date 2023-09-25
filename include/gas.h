@@ -29,6 +29,7 @@ public:
     Vector vel;
     uint mass;
     double radius;
+    double pot_energy = 0.0;
 
     bool is_deleted = false;
 
@@ -43,6 +44,7 @@ public:
     BaseMolecule(BaseMolecule&&)      = default;
 
     MoleculeType type() const noexcept { return _type; };
+    double energy() { return mass * vel.length_square(); }
 
     virtual ~BaseMolecule() = default;
 };
@@ -120,6 +122,8 @@ public:
 
         mol->is_deleted = true;
     }
+
+    double temp() {return _temp;}
 
     const dynarray<BaseMolecule *>& moleculas() const noexcept { return _moleculas; }
 

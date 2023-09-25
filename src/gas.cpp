@@ -13,6 +13,14 @@ static void collide_nya_nya(BaseMolecule* lhs, BaseMolecule *rhs, Gas& gas);
 static void collide_nya_meow(BaseMolecule* lhs, BaseMolecule *rhs, Gas& gas);
 static void collide_meow_nya(BaseMolecule* lhs, BaseMolecule *rhs, Gas& gas);
 static void collide_meow_meow(BaseMolecule* lhs, BaseMolecule *rhs, Gas& gas);
+static double calculate_mass(const Gas& gas);
+
+#ifndef NDEBUG
+#define ASSERT_BLOCK(expr) expr
+#else
+#define ASSERT_BLOCK(expr) {;}
+#endif
+// ---------------------------------------------------------------------------------------------------------------------
 
 using collide_func_t = void(*)(BaseMolecule*, BaseMolecule*, Gas& gas);
 
@@ -58,15 +66,21 @@ void Gas::collide(size_t i, size_t j) {
     handler(_moleculas[i], _moleculas[j], *this);
 }
 
+#include <iostream>
 void Gas::gc_and_stats() {
     double sum_temp = 0;
     memset(_counters, 0, sizeof(_counters)); // valid sizeof because it is uint[] type
 
+    ASSERT_BLOCK(double mass_before = calculate_mass(*this));
+
     for (uint i = 0; i < _moleculas.size(); ++i) {
-        if (_moleculas[i]->is_deleted) {
-            std::swap(_moleculas[i], _moleculas[_moleculas.size() - 1]);
+        while (i < _moleculas.size() && _moleculas[i]->is_deleted) {
+            delete _moleculas[i];
+            _moleculas[i] = _moleculas[_moleculas.size() - 1];
             _moleculas.pop_back();
         }
+
+        if (!(i < _moleculas.size())) { break; }
 
         double vel_sq = _moleculas[i]->vel.length_square();
         sum_temp += _moleculas[i]->mass * vel_sq;
@@ -75,6 +89,8 @@ void Gas::gc_and_stats() {
     }
 
     _temp = sum_temp / _moleculas.size();
+
+    assert(mass_before == calculate_mass(*this));
 }
 
 void Gas::change_temp(double delta) {
@@ -128,30 +144,40 @@ static bool is_hit(BaseMolecule *lhs, BaseMolecule* rhs) {
 static void collide_nya_nya(BaseMolecule* lhs, BaseMolecule *rhs, Gas& gas) {
     assert(typeid(*lhs) == typeid(NyaMolec) && "Incorrect lhs type");
     assert(typeid(*rhs) == typeid(NyaMolec) && "Incorrect rhs type");
+    ASSERT_BLOCK( double mass_before = calculate_mass(gas); )
 
     double total_mass = (lhs->mass + rhs->mass);
 
     Vector new_vel = (lhs->vel * lhs->mass + rhs->vel * rhs->mass) / total_mass;
     Point new_pos = lhs->pos + rhs->mass/total_mass * (rhs->pos - lhs->pos);
 
-    gas.add(new MeowMolec(new_pos, new_vel, total_mass));
+    BaseMolecule *new_praticle = new MeowMolec(new_pos, new_vel, total_mass);
+    new_praticle->pot_energy = lhs->energy() + rhs->energy() - new_praticle->energy();
+    gas.add(new_praticle);
 
     gas.mark_deleted(lhs);
     gas.mark_deleted(rhs);
+
+    assert(mass_before == calculate_mass(gas));
+    assert(new_praticle->pot_energy >= 0);
 }
 
 static void collide_nya_meow(BaseMolecule* lhs, BaseMolecule *rhs, Gas& gas) {
     assert(typeid(*lhs) == typeid(NyaMolec) && "Incorrect lhs type");
     assert(typeid(*rhs) == typeid(MeowMolec) && "Incorrect rhs type");
+    ASSERT_BLOCK( double mass_before = calculate_mass(gas); )
 
     double total_mass = (lhs->mass + rhs->mass);
+    double energy_before = lhs->energy() + rhs->energy();
 
     rhs->vel = (lhs->vel * lhs->mass + rhs->vel * rhs->mass) / total_mass;
     rhs->mass = total_mass;
     rhs->radius = BASE_RADIUS + rhs->mass * MASS_RADIUS_COEFF;
-
+    rhs->pot_energy += energy_before - rhs->energy();
 
     gas.mark_deleted(lhs);
+    assert(mass_before == calculate_mass(gas));
+    assert(rhs->pot_energy >= 0);
 }
 
 static void collide_meow_nya(BaseMolecule* lhs, BaseMolecule *rhs, Gas& gas) {
@@ -164,17 +190,38 @@ static void collide_meow_nya(BaseMolecule* lhs, BaseMolecule *rhs, Gas& gas) {
 static void collide_meow_meow(BaseMolecule* lhs, BaseMolecule *rhs, Gas& gas) {
     assert(typeid(*lhs) == typeid(MeowMolec) && "Incorrect lhs type");
     assert(typeid(*rhs) == typeid(MeowMolec) && "Incorrect rhs type");
+    ASSERT_BLOCK( double mass_before = calculate_mass(gas); )
 
     uint total_mass = lhs->mass + rhs->mass;
     Point avg_pos = lhs->pos + rhs->mass/total_mass * (rhs->pos - lhs->pos);
     double avg_vel = ((lhs->vel * lhs->mass + rhs->vel * rhs->mass) / total_mass).length();
 
+    double vel_val = sqrt((lhs->energy() + rhs->energy() + lhs->pot_energy + rhs->pot_energy) / total_mass);
+
     for (uint i = 0; i < total_mass; ++i) {
         Vector direction = Vector::random(-1, 1).norm();
         Point p_pos = avg_pos + direction * BASE_RADIUS * 4;
-        gas.spawn_random<NyaMolec>(p_pos);
+        gas.add(new NyaMolec(p_pos, vel_val * direction, 1));
     }
 
     gas.mark_deleted(lhs);
     gas.mark_deleted(rhs);
+    assert(mass_before == calculate_mass(gas));
+}
+
+static double calculate_mass(const Gas& gas) {
+#if DEBUG_CHECK_MASS
+    auto mol = gas.moleculas();
+
+    double total_mass = 0;
+    for (const auto& t: mol) {
+        if (!t->is_deleted) {
+            total_mass += t->mass;
+        }
+    }
+
+    return total_mass;
+#else 
+    return -1.0;
+#endif
 }

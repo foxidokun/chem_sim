@@ -61,20 +61,6 @@ int main() {
     }
 }
 
-void callback_a(const sf::Event&) {
-    std::cout << "A\n";
-}
-
-void callback_и(const sf::Event&) {
-    std::cout << "B\n";
-}
-void callback_с(const sf::Event&) {
-    std::cout << "C\n";
-}
-void callback_в(const sf::Event&) {
-    std::cout << "D\n";
-}
-
 template<typename T>
 void spawn_btn_callback(const sf::Event&, void *args) {
     Gas *gas = static_cast<Gas *>(args);

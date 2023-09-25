@@ -3,6 +3,7 @@
 typedef unsigned int uint;
 
 #define ALWAYS_SAME_RANDOM 0
+#define DEBUG_CHECK_MASS   0
 
 const char *const WINDOW_TITLE   = "Render preview";
 const double NEAR_ZERO_VEC_1DLEN = 1e-5;
