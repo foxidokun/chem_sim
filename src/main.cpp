@@ -7,8 +7,7 @@
 #include <thread>
 #include <iostream>
 
-void add_buttons(ButtonManager& button_mgr);
-
+void add_buttons(ButtonManager& button_mgr, Gas& gas);
 namespace chrono = std::chrono;
 
 int main() {
@@ -22,7 +21,7 @@ int main() {
     }
 
     ButtonManager buttonmgr;
-    add_buttons(buttonmgr);
+    add_buttons(buttonmgr, gas);
 
     auto frame_start_time = chrono::system_clock::now();
 
@@ -76,8 +75,19 @@ void callback_в(const sf::Event&) {
     std::cout << "D\n";
 }
 
-void add_buttons(ButtonManager& button_mgr) {
-    auto test_butt = new TextureButton(Point(600, 0), 50, 30, callback_a);
+template<typename T>
+void spawn_btn_callback(const sf::Event&, void *args) {
+    Gas *gas = static_cast<Gas *>(args);
 
-    button_mgr.register_button(test_butt);
+    for (uint i = 0; i < 10; ++i) {
+        gas->spawn_random<T>();
+    }
+}
+
+void add_buttons(ButtonManager& button_mgr, Gas& gas) {
+    auto spawn_nya  = new TextureButton(Point(600, 0), 50, 30, spawn_btn_callback<NyaMolec>, &gas);
+    auto spawn_meow = new TextureButton(Point(640, 0), 50, 30, spawn_btn_callback<MeowMolec>, &gas);
+
+    button_mgr.register_button(spawn_nya);
+    button_mgr.register_button(spawn_meow);
 }
