@@ -15,7 +15,7 @@ const uint GAS_HEIGHT = WINDOW_HEIGHT - 40;
 
 const uint PISTON_HEIGHT = 5;
 
-const double BASE_RADIUS       = 1;
-const double MASS_RADIUS_COEFF = 0.2;
+const double BASE_RADIUS       = 3;
+const double MASS_RADIUS_COEFF = 0.5;
 
-const double GC_THRESHOLD = 0.1;
+const double MIN_VELOCITY = 0.02;

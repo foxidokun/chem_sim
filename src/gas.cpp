@@ -1,11 +1,12 @@
 #include "gas.h"
 #include <cassert>
+#include <cstring>
 
 // ---------------------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------------------------------------
 
-static void wall_collision(BaseMolecule* molec, const Interval& x_limits, const Interval& y_limits);
+static bool wall_collision(BaseMolecule* molec, const Interval& x_limits, const Interval& y_limits);
 static bool is_hit(BaseMolecule *lhs, BaseMolecule* rhs);
 static void piston_collision(BaseMolecule* molec, double piston_y);
 static void collide_nya_nya(BaseMolecule* lhs, BaseMolecule *rhs, Gas& gas);
@@ -28,13 +29,14 @@ const collide_func_t handlers[(uint) MoleculeType::ENUM_SIZE][(uint) MoleculeTyp
 
 void Gas::tick() {
     uint current_size = _moleculas.size();
+    _pressure = 0;
 
     for (uint i = 0; i < current_size; ++i) {
         if (_moleculas[i]->is_deleted) {continue;}
 
         _moleculas[i]->pos += _moleculas[i]->vel;
 
-        wall_collision(_moleculas[i], _x_limits, _y_limits);
+        _pressure += wall_collision(_moleculas[i], _x_limits, _y_limits);
         piston_collision(_moleculas[i], piston_y);
 
         for (uint j = i + 1; j < current_size; ++j) {
@@ -47,9 +49,7 @@ void Gas::tick() {
         }
     }
 
-    if (((double) _gc_count) / _moleculas.size() > GC_THRESHOLD) {
-        gc();
-    }
+    gc_and_stats();
 }
 
 void Gas::collide(size_t i, size_t j) {
@@ -58,22 +58,57 @@ void Gas::collide(size_t i, size_t j) {
     handler(_moleculas[i], _moleculas[j], *this);
 }
 
-void Gas::gc() {
-    // TODO
+void Gas::gc_and_stats() {
+    double sum_temp = 0;
+    memset(_counters, 0, sizeof(_counters)); // valid sizeof because it is uint[] type
+
+    for (uint i = 0; i < _moleculas.size(); ++i) {
+        if (_moleculas[i]->is_deleted) {
+            std::swap(_moleculas[i], _moleculas[_moleculas.size() - 1]);
+            _moleculas.pop_back();
+        }
+
+        double vel_sq = _moleculas[i]->vel.length_square();
+        sum_temp += _moleculas[i]->mass * vel_sq;
+
+        _counters[(uint) _moleculas[i]->type()]++;
+    }
+
+    _temp = sum_temp / _moleculas.size();
+}
+
+void Gas::change_temp(double delta) {
+    double ratio;
+    if (_temp + delta > 0) {
+        ratio = sqrt((_temp + delta) / _temp);
+
+        for (uint i = 0; i < _moleculas.size(); ++i) {
+            _moleculas[i]->vel *= ratio;
+        }
+    } else {
+        for (uint i = 0; i < _moleculas.size(); ++i) {
+            _moleculas[i]->vel *= MIN_VELOCITY / _moleculas[i]->vel.length();
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------------------------------------
 
-static void wall_collision(BaseMolecule* molec, const Interval& x_limits, const Interval& y_limits) {
+static bool wall_collision(BaseMolecule* molec, const Interval& x_limits, const Interval& y_limits) {
+    bool res = false;
     if (!x_limits.contains(molec->pos.x)) {
         molec->vel.x *= -1;
+        res = true;
     }
 
     if (!y_limits.contains(molec->pos.y)) {
         molec->vel.y *= -1;
+        res = true;
     }
+
+    return res;
 }
 
 static void piston_collision(BaseMolecule* molec, double piston_y) {
@@ -89,7 +124,6 @@ static bool is_hit(BaseMolecule *lhs, BaseMolecule* rhs) {
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
-#include <iostream>
 
 static void collide_nya_nya(BaseMolecule* lhs, BaseMolecule *rhs, Gas& gas) {
     assert(typeid(*lhs) == typeid(NyaMolec) && "Incorrect lhs type");
@@ -137,9 +171,8 @@ static void collide_meow_meow(BaseMolecule* lhs, BaseMolecule *rhs, Gas& gas) {
 
     for (uint i = 0; i < total_mass; ++i) {
         Vector direction = Vector::random(-1, 1).norm();
-        Vector p_vel = direction * (2.2 * sqrt(random_double()) * avg_vel);
-        Point p_pos = avg_pos + direction * BASE_RADIUS * 10;
-        gas.add(new NyaMolec(p_pos, p_vel, 1));
+        Point p_pos = avg_pos + direction * BASE_RADIUS * 4;
+        gas.spawn_random<NyaMolec>(p_pos);
     }
 
     gas.mark_deleted(lhs);

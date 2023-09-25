@@ -84,10 +84,24 @@ void spawn_btn_callback(const sf::Event&, void *args) {
     }
 }
 
+void increase_temp_callback(const sf::Event&, void *args) {
+    Gas *gas = static_cast<Gas *>(args);
+    gas->change_temp(0.01);
+}
+
+void decrease_temp_callback(const sf::Event&, void *args) {
+    Gas *gas = static_cast<Gas *>(args);
+    gas->change_temp(-0.01);
+}
+
 void add_buttons(ButtonManager& button_mgr, Gas& gas) {
-    auto spawn_nya  = new TextureButton(Point(600, 0), 50, 30, spawn_btn_callback<NyaMolec>, &gas);
-    auto spawn_meow = new TextureButton(Point(640, 0), 50, 30, spawn_btn_callback<MeowMolec>, &gas);
+    auto spawn_nya  = new TextureButton(Point(600, 0), 40, 30, spawn_btn_callback<NyaMolec>, &gas);
+    auto spawn_meow = new TextureButton(Point(650, 0), 40, 30, spawn_btn_callback<MeowMolec>, &gas);
+    auto inc_temp   = new TextureButton(Point(700, 0), 40, 30, increase_temp_callback, &gas);
+    auto dec_temp   = new TextureButton(Point(750, 0), 40, 30, decrease_temp_callback, &gas);
 
     button_mgr.register_button(spawn_nya);
     button_mgr.register_button(spawn_meow);
+    button_mgr.register_button(inc_temp);
+    button_mgr.register_button(dec_temp);
 }

@@ -78,10 +78,13 @@ private:
     dynarray<BaseMolecule *> _moleculas;
     Interval _x_limits;
     Interval _y_limits;
-    uint _gc_count;
+
+    double _temp;
+    uint _counters[(uint) MoleculeType::ENUM_SIZE];
+    uint _pressure;
 
     void collide(size_t i, size_t j);
-    void gc();
+    void gc_and_stats();
 
 public:
     double piston_y;
@@ -94,6 +97,10 @@ public:
         {};
 
     void add(BaseMolecule *mol) {
+        mol->pos.x = _x_limits.clamp(mol->pos.x);
+        mol->pos.y = _x_limits.clamp(mol->pos.y);
+        mol->pos.y = std::min(mol->pos.y, piston_y);
+
         _moleculas.push_back(mol);
     }
 
@@ -105,11 +112,12 @@ public:
 
     void tick();
     void render(sf::RenderTexture& window) const;
+    void update_temp();
+    void change_temp(double delta);
 
     void mark_deleted(BaseMolecule *mol) {
         assert(!mol->is_deleted);
 
-        ++_gc_count;
         mol->is_deleted = true;
     }
 
@@ -132,6 +140,7 @@ void Gas::spawn_random() {
 
 template<typename T>
 void Gas::spawn_random(Point pos) {
-    // TODO velocity based on gas temperature
-    add(new T(pos, Vector::random(-0.2, 0.1), 1));
+    Vector vel_direction = Vector::random(-1, 1).norm();
+    double vel_val = std::max(sqrt(_temp), MIN_VELOCITY);
+    add(new T(pos, vel_val * vel_direction, 1));
 };
