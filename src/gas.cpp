@@ -194,12 +194,12 @@ static void collide_meow_meow(BaseMolecule* lhs, BaseMolecule *rhs, Gas& gas) {
 
     uint total_mass = lhs->mass + rhs->mass;
     Point avg_pos = lhs->pos + rhs->mass/total_mass * (rhs->pos - lhs->pos);
-    double avg_vel = ((lhs->vel * lhs->mass + rhs->vel * rhs->mass) / total_mass).length();
+    Vector avg_direction = ((lhs->vel * lhs->mass + rhs->vel * rhs->mass) / total_mass).norm();
 
     double vel_val = sqrt((lhs->energy() + rhs->energy() + lhs->pot_energy + rhs->pot_energy) / total_mass);
 
     for (uint i = 0; i < total_mass; ++i) {
-        Vector direction = Vector::random(-1, 1).norm();
+        Vector direction = (Vector::random(-1, 1).norm() + avg_direction).norm();
         Point p_pos = avg_pos + direction * BASE_RADIUS * 4;
         gas.add(new NyaMolec(p_pos, vel_val * direction, 1));
     }
