@@ -12,7 +12,7 @@ void Gas::render(sf::RenderTexture& window) const {
         }
     }
 
-    render_piston(window, piston_y);
+    render_piston(window, _piston_y);
 }
 
 void NyaMolec::render(sf::RenderTexture& window) const {

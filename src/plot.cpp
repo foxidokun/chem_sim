@@ -44,14 +44,14 @@ void Plot::render(sf::RenderTexture& window) const {
     double new_max = std::pow(10, std::ceil (std::log10(std::fabs(_max))));
     double new_min = std::pow(10, std::floor(std::log10(std::fabs(_max))));
 
-    double x_step = texture_size.x / (_capacity + 1);
+    double x_step = ((double)texture_size.x) / (_capacity + 1);
     double y_step = 0.96 * texture_size.y / (new_max - new_min);
 
     double x_gap = x_step / 2;
     double y_gap = 0.02 * texture_size.y;
 
     for (uint i = WRAP_I(_index + 1), x_pos = 0; i != _index; i = WRAP_I(i+1), ++x_pos) {
-        sf::RectangleShape point(sf::Vector2f(1, 1));
+        sf::RectangleShape point(sf::Vector2f(2, 2));
         point.setFillColor(_color);
         point.setRotation(45);
         

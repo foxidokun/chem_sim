@@ -31,21 +31,23 @@ const collide_func_t handlers[(uint) MoleculeType::ENUM_SIZE][(uint) MoleculeTyp
     collide_meow_meow
 };
 
+const double MINIMAL_PISTON = 30;
+
 // ---------------------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------------------------------------
 
 void Gas::tick() {
     uint current_size = _moleculas.size();
-    _pressure = 0;
+    _pressure_hist[_pressure_indx] = 0;
 
     for (uint i = 0; i < current_size; ++i) {
         if (_moleculas[i]->is_deleted) {continue;}
 
         _moleculas[i]->pos += _moleculas[i]->vel;
 
-        _pressure += wall_collision(_moleculas[i], _x_limits, _y_limits);
-        piston_collision(_moleculas[i], piston_y);
+        _pressure_hist[_pressure_indx] += wall_collision(_moleculas[i], _x_limits, _y_limits);
+        piston_collision(_moleculas[i], _piston_y);
 
         for (uint j = i + 1; j < current_size; ++j) {
             if (_moleculas[i]->is_deleted) {break;}
@@ -56,6 +58,15 @@ void Gas::tick() {
             }
         }
     }
+
+    _pressure_indx = (_pressure_indx + 1 < PRESSURE_SAMPLE_NUM) ? _pressure_indx + 1 : 0;
+
+    double sum = 0;
+    for (uint i = 0; i < PRESSURE_SAMPLE_NUM; ++i) {
+        sum += _pressure_hist[i];
+    }
+
+    _pressure =  sum / PRESSURE_SAMPLE_NUM;
 
     gc_and_stats();
 }
@@ -92,10 +103,9 @@ void Gas::gc_and_stats() {
     assert(mass_before == calculate_mass(*this));
 }
 
-void Gas::change_temp(double delta) {
-    double ratio;
-    if (_temp + delta > 0) {
-        ratio = sqrt((_temp + delta) / _temp);
+void Gas::change_temp(double ratio) {
+    if (_temp * ratio > 0) {
+        ratio = sqrt(ratio);
 
         for (uint i = 0; i < _moleculas.size(); ++i) {
             _moleculas[i]->vel *= ratio;
@@ -103,6 +113,20 @@ void Gas::change_temp(double delta) {
     } else {
         for (uint i = 0; i < _moleculas.size(); ++i) {
             _moleculas[i]->vel *= MIN_VELOCITY / _moleculas[i]->vel.length();
+        }
+    }
+}
+
+#include <iostream>
+void Gas::set_piston(double val) {
+    val = _y_limits.clamp(val+PISTON_HEIGHT) - PISTON_HEIGHT;
+    val = std::max(MINIMAL_PISTON, val);
+
+    _piston_y = val;
+
+    for (uint i = 0; i < _moleculas.size(); ++i) {
+        if (_moleculas[i]->pos.y > _piston_y) {
+            _moleculas[i]->pos.y = _piston_y - PISTON_HEIGHT;
         }
     }
 }

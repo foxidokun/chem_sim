@@ -8,15 +8,39 @@
 #include <thread>
 #include <iostream>
 
-void add_buttons(ButtonManager& button_mgr, Gas& gas);
+static void add_buttons(ButtonManager& button_mgr, Gas& gas);
+static void render_background(sf::RenderWindow& window);
+static void render_gas(sf::RenderWindow& window, const Gas& gas);
+static void render_buttons(sf::RenderWindow& window, const ButtonManager& buttonmgr);
+static void render_plot(sf::RenderWindow& window, const Plot& plot, const Point& pos, const Vector& size);
+
 namespace chrono = std::chrono;
 
+
+const Point  PRESS_PLOT_POS   (542,  40);
+const Vector PRESS_PLOT_SIZE  (501, 170);
+const Point  TEMP_PLOT_POS  (542, 223);
+const Vector TEMP_PLOT_SIZE (501, 156);
+const Point  COUNT1_PLOT_POS (542, 388);
+const Vector COUNT1_PLOT_SIZE(230, 161);
+const Point  COUNT2_PLOT_POS (790, 388);
+const Vector COUNT2_PLOT_SIZE(262, 161);
+
+
 int main() {
+    sf::Texture background_texture;
+    background_texture.loadFromFile(BACKGROUNG_PATH);
+    sf::Sprite background(background_texture);
+
     sf::RenderWindow window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), WINDOW_TITLE);
 
     Gas gas(Interval(0, GAS_WIDTH), Interval(0, GAS_HEIGHT));
-    Plot temp_plot(300);
-    gas.piston_y = GAS_HEIGHT - 50;
+    gas.set_piston(GAS_HEIGHT - 50);
+
+    Plot temp_plot(100);
+    Plot pressure_plot(100);
+    Plot count1_plot(100);
+    Plot count2_plot(100);
 
     for (uint i = 0; i < 300; ++i) {
         gas.spawn_random<NyaMolec>();
@@ -32,35 +56,24 @@ int main() {
     while (window.isOpen()) {
         window.clear();
 
-        sf::RenderTexture back;
-        back.create(WINDOW_WIDTH, WINDOW_HEIGHT);
-        back.clear(sf::Color::Black);
-
-        sf::RenderTexture gas_texture;
-        gas_texture.create(GAS_WIDTH, GAS_HEIGHT);
-        sf::Sprite gas_block(gas_texture.getTexture());
-        gas_block.setPosition(20, 20);
-
-        sf::RenderTexture plot_texture;
-        plot_texture.create(600, 50);
-        plot_texture.clear(sf::Color::Black);
-        sf::Sprite plot_block(plot_texture.getTexture());
-        plot_block.setPosition(400, 400);
-
         gas.tick();
         ++frame_counter;
-        if (frame_counter > 5) {
+        if (frame_counter > 10) {
             temp_plot.add_point(gas.temp());
+            pressure_plot.add_point(gas.pressure());
+            count1_plot.add_point(gas.counters()[0]);
+            count2_plot.add_point(gas.counters()[1]);
+
             frame_counter = 0;
         }
 
-        gas.render(gas_texture);
-        temp_plot.render(plot_texture);
-        buttonmgr.render(back);
-
-        window.draw(sf::Sprite(back.getTexture()));
-        window.draw(gas_block);
-        window.draw(plot_block);
+        window.draw(background);
+        render_gas(window, gas);
+        render_buttons(window, buttonmgr);
+        render_plot(window, temp_plot, TEMP_PLOT_POS, TEMP_PLOT_SIZE);
+        render_plot(window, pressure_plot, PRESS_PLOT_POS, PRESS_PLOT_SIZE);
+        render_plot(window, count1_plot, COUNT1_PLOT_POS, COUNT1_PLOT_SIZE);
+        render_plot(window, count2_plot, COUNT2_PLOT_POS, COUNT2_PLOT_SIZE);
         window.display();
 
         sf::Event event;
@@ -88,22 +101,66 @@ void spawn_btn_callback(const sf::Event&, void *args) {
 
 void increase_temp_callback(const sf::Event&, void *args) {
     Gas *gas = static_cast<Gas *>(args);
-    gas->change_temp(0.01);
+    gas->change_temp(1.1);
 }
 
 void decrease_temp_callback(const sf::Event&, void *args) {
     Gas *gas = static_cast<Gas *>(args);
-    gas->change_temp(-0.01);
+    gas->change_temp(0.9);
 }
 
-void add_buttons(ButtonManager& button_mgr, Gas& gas) {
-    auto spawn_nya  = new TextureButton(Point(600, 0), 40, 30, spawn_btn_callback<NyaMolec>, &gas);
-    auto spawn_meow = new TextureButton(Point(650, 0), 40, 30, spawn_btn_callback<MeowMolec>, &gas);
-    auto inc_temp   = new TextureButton(Point(700, 0), 40, 30, increase_temp_callback, &gas);
-    auto dec_temp   = new TextureButton(Point(750, 0), 40, 30, decrease_temp_callback, &gas);
+void move_up_callback(const sf::Event&, void *args) {
+    Gas *gas = static_cast<Gas *>(args);
+    gas->set_piston(gas->piston() + PISTON_HEIGHT);
+}
+
+void move_down_callback(const sf::Event&, void *args) {
+    Gas *gas = static_cast<Gas *>(args);
+    gas->set_piston(gas->piston() - PISTON_HEIGHT);
+}
+
+static void add_buttons(ButtonManager& button_mgr, Gas& gas) {
+    auto spawn_nya   = new TextureButton(Point(606, 41), 50, 50, spawn_btn_callback<NyaMolec>, &gas);
+    auto spawn_meow  = new TextureButton(Point(673, 41), 50, 50, spawn_btn_callback<MeowMolec>, &gas);
+    auto inc_temp    = new TextureButton(Point(742, 41), 50, 50, increase_temp_callback, &gas);
+    auto dec_temp    = new TextureButton(Point(809, 41), 50, 50, decrease_temp_callback, &gas);
+    auto up_piston   = new TextureButton(Point(873, 41), 50, 50, move_up_callback, &gas);
+    auto down_piston = new TextureButton(Point(939, 41), 50, 50, move_down_callback, &gas);
 
     button_mgr.register_button(spawn_nya);
     button_mgr.register_button(spawn_meow);
     button_mgr.register_button(inc_temp);
     button_mgr.register_button(dec_temp);
+    button_mgr.register_button(up_piston);
+    button_mgr.register_button(down_piston);
+}
+
+static void render_gas(sf::RenderWindow& window, const Gas& gas) {
+    sf::RenderTexture gas_texture;
+    gas_texture.create(GAS_WIDTH, GAS_HEIGHT);
+    sf::Sprite gas_block(gas_texture.getTexture());
+    gas_block.setPosition(GAS_POS[0], GAS_POS[1]);
+
+    gas.render(gas_texture);
+
+    window.draw(gas_block);
+}
+
+static void render_buttons(sf::RenderWindow& window, const ButtonManager& buttonmgr) {
+    sf::RenderTexture background;
+    background.create(WINDOW_WIDTH, WINDOW_HEIGHT);
+
+    buttonmgr.render(background);
+    window.draw(sf::Sprite(background.getTexture()));
+}
+
+static void render_plot(sf::RenderWindow& window, const Plot& plot, const Point& pos, const Vector& size) {
+    sf::RenderTexture plot_texture;
+    plot_texture.create(size.x, size.y);
+    plot_texture.clear();
+    sf::Sprite plot_block(plot_texture.getTexture());
+    plot_block.setPosition(pos.x, pos.y);
+
+    plot.render(plot_texture);
+    window.draw(plot_block);
 }

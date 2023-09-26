@@ -10,6 +10,8 @@
 #include "render.h"
 #include <cassert>
 
+const int PRESSURE_SAMPLE_NUM = 60;
+
 // ---------------------------------------------------------------------------------------------------------------------
 // Molecula types
 // ---------------------------------------------------------------------------------------------------------------------
@@ -83,25 +85,27 @@ private:
 
     double _temp;
     uint _counters[(uint) MoleculeType::ENUM_SIZE];
-    uint _pressure;
+    uint _pressure_hist[PRESSURE_SAMPLE_NUM] = {};
+    uint _pressure_indx = 0;
+    double _pressure = 0.0;
+    double _piston_y;
 
     void collide(size_t i, size_t j);
     void gc_and_stats();
 
 public:
-    double piston_y;
-
     Gas() = default;
 
     Gas(Interval x_limits, Interval y_limits):
         _x_limits(x_limits),
-        _y_limits(y_limits)
+        _y_limits(y_limits),
+        _piston_y(y_limits.max-PISTON_HEIGHT)
         {};
 
     void add(BaseMolecule *mol) {
         mol->pos.x = _x_limits.clamp(mol->pos.x);
         mol->pos.y = _x_limits.clamp(mol->pos.y);
-        mol->pos.y = std::min(mol->pos.y, piston_y);
+        mol->pos.y = std::min(mol->pos.y, _piston_y);
 
         _moleculas.push_back(mol);
     }
@@ -115,6 +119,7 @@ public:
     void tick();
     void render(sf::RenderTexture& window) const final;
     void change_temp(double delta);
+    void set_piston(double val);
 
     void mark_deleted(BaseMolecule *mol) {
         assert(!mol->is_deleted);
@@ -122,9 +127,10 @@ public:
     }
 
     double temp() const noexcept { return _temp; }
-    uint pressure() const noexcept { return _pressure; }
-    const uint *counters() const noexcept { return _counters; }
+    double pressure() const noexcept { return _pressure; };
     const dynarray<BaseMolecule *>& moleculas() const noexcept { return _moleculas; }
+    const uint *counters() const noexcept { return _counters; }
+    double piston() const noexcept { return _piston_y; }
 
     ~Gas() {
         for (uint i = 0; i < _moleculas.size(); ++i) {
@@ -136,7 +142,7 @@ public:
 template<typename T>
 void Gas::spawn_random() {
     Point pos = Point(random_double(_x_limits.min, _x_limits.max),
-                        random_double(_y_limits.min, std::min(_y_limits.max, piston_y)));
+                        random_double(_y_limits.min, std::min(_y_limits.max, _piston_y)));
 
     spawn_random<T>(pos);
 };
