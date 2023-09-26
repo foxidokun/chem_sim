@@ -9,7 +9,6 @@
 #include <iostream>
 
 static void add_buttons(ButtonManager& button_mgr, Gas& gas);
-static void render_background(sf::RenderWindow& window);
 static void render_gas(sf::RenderWindow& window, const Gas& gas);
 static void render_buttons(sf::RenderWindow& window, const ButtonManager& buttonmgr);
 static void render_plot(sf::RenderWindow& window, const Plot& plot, const Point& pos, const Vector& size);
