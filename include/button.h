@@ -18,11 +18,11 @@ class Button: public Renderable {
 
 public:
     Button(Point pos, double width, double height, onclick_func_t callback, void *callback_args):
+        _on_click(callback),
+        _callback_args(callback_args),
         _pos(pos),
         _width(width),
-        _height(height),
-        _on_click(callback),
-        _callback_args(callback_args)
+        _height(height)
         {}
 
     bool is_hit(const sf::RenderTarget& window, const sf::Event& event) const noexcept {
@@ -84,5 +84,5 @@ public:
 
     void dispatch(const sf::RenderTarget& window, const sf::Event& event);
 
-    void render(sf::RenderTexture& window) const;
+    void render(sf::RenderTexture& window) const final;
 };

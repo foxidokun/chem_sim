@@ -2,6 +2,7 @@
 #include <SFML/Graphics.hpp>
 #include "render.h"
 #include "gas.h"
+#include "plot.h"
 #include "button.h"
 #include <chrono>
 #include <thread>
@@ -14,6 +15,7 @@ int main() {
     sf::RenderWindow window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), WINDOW_TITLE);
 
     Gas gas(Interval(0, GAS_WIDTH), Interval(0, GAS_HEIGHT));
+    Plot temp_plot(300);
     gas.piston_y = GAS_HEIGHT - 50;
 
     for (uint i = 0; i < 300; ++i) {
@@ -24,6 +26,8 @@ int main() {
     add_buttons(buttonmgr, gas);
 
     auto frame_start_time = chrono::system_clock::now();
+
+    uint64_t frame_counter = 0;
 
     while (window.isOpen()) {
         window.clear();
@@ -37,12 +41,26 @@ int main() {
         sf::Sprite gas_block(gas_texture.getTexture());
         gas_block.setPosition(20, 20);
 
+        sf::RenderTexture plot_texture;
+        plot_texture.create(600, 50);
+        plot_texture.clear(sf::Color::Black);
+        sf::Sprite plot_block(plot_texture.getTexture());
+        plot_block.setPosition(400, 400);
+
         gas.tick();
+        ++frame_counter;
+        if (frame_counter > 5) {
+            temp_plot.add_point(gas.temp());
+            frame_counter = 0;
+        }
+
         gas.render(gas_texture);
+        temp_plot.render(plot_texture);
         buttonmgr.render(back);
 
         window.draw(sf::Sprite(back.getTexture()));
         window.draw(gas_block);
+        window.draw(plot_block);
         window.display();
 
         sf::Event event;
@@ -51,8 +69,6 @@ int main() {
                 window.close();
                 return 0;
             } else if (event.type == sf::Event::MouseButtonPressed || event.type == sf::Event::MouseButtonReleased) {
-                auto cc = window.mapPixelToCoords(sf::Vector2i(event.mouseButton.x, event.mouseButton.y));
-
                 buttonmgr.dispatch(window, event);
             }
         }

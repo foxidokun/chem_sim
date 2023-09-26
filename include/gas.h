@@ -113,18 +113,17 @@ public:
     void spawn_random(Point pos);
 
     void tick();
-    void render(sf::RenderTexture& window) const;
-    void update_temp();
+    void render(sf::RenderTexture& window) const final;
     void change_temp(double delta);
 
     void mark_deleted(BaseMolecule *mol) {
         assert(!mol->is_deleted);
-
         mol->is_deleted = true;
     }
 
-    double temp() {return _temp;}
-
+    double temp() const noexcept { return _temp; }
+    uint pressure() const noexcept { return _pressure; }
+    const uint *counters() const noexcept { return _counters; }
     const dynarray<BaseMolecule *>& moleculas() const noexcept { return _moleculas; }
 
     ~Gas() {

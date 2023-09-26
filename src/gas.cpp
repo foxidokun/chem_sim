@@ -66,7 +66,6 @@ void Gas::collide(size_t i, size_t j) {
     handler(_moleculas[i], _moleculas[j], *this);
 }
 
-#include <iostream>
 void Gas::gc_and_stats() {
     double sum_temp = 0;
     memset(_counters, 0, sizeof(_counters)); // valid sizeof because it is uint[] type
@@ -88,7 +87,7 @@ void Gas::gc_and_stats() {
         _counters[(uint) _moleculas[i]->type()]++;
     }
 
-    _temp = sum_temp / _moleculas.size();
+    _temp = sum_temp / _moleculas.size(); // update temp
 
     assert(mass_before == calculate_mass(*this));
 }
