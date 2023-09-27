@@ -45,6 +45,7 @@ public:
     size_t size()     const noexcept { return _size; }
 
     void push_back(const T& elem);
+    void push_back(T&& elem);
 
     T& operator[](size_t index) noexcept {
         assert(index < _size);
@@ -82,7 +83,7 @@ void dynarray<T>::resize(size_t new_size) {
     T* new_data = reinterpret_cast<T*>(malloc(new_size * sizeof(T)));
 
     for (size_t i = 0; i < _size; ++i) {
-        new(new_data + i) T(_data[i]);
+        new(new_data + i) T(std::move(_data[i]));
     }
 
     free(_data);
@@ -100,5 +101,13 @@ void dynarray<T>::push_back(const T& elem) {
     _size++;
 }
 
+template<class T>
+void dynarray<T>::push_back(T&& elem) {
+    resize_if_needed();
+
+    new(_data + _size) T(std::move(elem));
+
+    _size++;
+}
 
 #endif

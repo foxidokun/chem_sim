@@ -16,10 +16,10 @@ static void render_plot(sf::RenderWindow& window, const Plot& plot, const Point&
 namespace chrono = std::chrono;
 
 
-const Point  PRESS_PLOT_POS   (542,  40);
-const Vector PRESS_PLOT_SIZE  (501, 170);
-const Point  TEMP_PLOT_POS  (542, 223);
-const Vector TEMP_PLOT_SIZE (501, 156);
+const Point  TEMP_PLOT_POS   (542,  40);
+const Vector TEMP_PLOT_SIZE  (501, 170);
+const Point  PRESS_PLOT_POS  (542, 223);
+const Vector PRESS_PLOT_SIZE (501, 156);
 const Point  COUNT1_PLOT_POS (542, 388);
 const Vector COUNT1_PLOT_SIZE(230, 161);
 const Point  COUNT2_PLOT_POS (790, 388);
