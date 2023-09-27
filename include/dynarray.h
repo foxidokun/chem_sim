@@ -46,19 +46,19 @@ public:
 
     void push_back(const T& elem);
 
-    T& operator[](size_t index){
+    T& operator[](size_t index) noexcept {
         assert(index < _size);
 
         return _data[index];
     }
 
-    const T& operator[](size_t index) const {
+    const T& operator[](size_t index) const noexcept {
         assert(index < _size);
 
         return _data[index];
     }
 
-    void pop_back() {
+    void pop_back() noexcept {
         if (_size > 0) {
             _data[_size - 1].~T();
             --_size;
